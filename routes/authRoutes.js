@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const { pool } = require("../db/db");
 const { BYCRYPT_SALT_ROUNDS } = require("../db/db");
+const SECRET_KEY = process.env.JWT_SECRET_KEY || "fallback-secret-key";
 
 // genetaring a random user id
 function generateUserId(length = 6) {
@@ -81,7 +82,9 @@ router.post("/register", async (req, res) => {
     const salt = await bcrypt.genSalt(BYCRYPT_SALT_ROUNDS);
     const hashedPassword = await bcrypt.hash(password, salt);
     const userId = await getUniqueUserId();
-
+    const fullPhoneNumber = phoneNumber.startsWith("1")
+      ? phoneNumber
+      : `1${phoneNumber}`;
     // query for adding the user to the database
     const createUserQuery = `INSERT INTO users (
         user_id,
@@ -98,7 +101,7 @@ router.post("/register", async (req, res) => {
       hashedPassword,
       firstName,
       lastName,
-      phoneNumber,
+      fullPhoneNumber,
     ];
     const result = await pool.query(createUserQuery, values);
     const user = result.rows[0];
@@ -112,7 +115,7 @@ router.post("/register", async (req, res) => {
         lastName: user.last_name,
         phoneNumber: user.phone_number,
       },
-      "secret-key-unique",
+      SECRET_KEY,
       {
         expiresIn: "24h",
       }
@@ -137,26 +140,40 @@ router.post("/register", async (req, res) => {
 
 // Login endpoint for handling user login using username/email and password
 router.post("/login", async (req, res) => {
-  const { loginIdentifier, password } = req.body;
-  try {
-    const isEmail = loginIdentifier.includes("@");
-    const getUserQuery = isEmail
-      ? `SELECT * FROM users WHERE email = $1`
-      : `SELECT * FROM users WHERE phone_number = $1`;
+  const { email, phoneNumber, password } = req.body;
+  console.log("Request body:", req.body);
 
-    const result = await pool.query(getUserQuery, [loginIdentifier]);
+  if (!email && !phoneNumber) {
+    return res.status(400).json({
+      message: "Please provide an email or phone number.",
+    });
+  }
+
+  let getUserQuery;
+
+  if (email) {
+    getUserQuery = `SELECT * FROM users WHERE email = $1`;
+  } else if (phoneNumber) {
+    getUserQuery = `SELECT * FROM users WHERE phone_number = $1`;
+  }
+
+  try {
+    const result = await pool.query(getUserQuery, [email || phoneNumber]);
     const user = result.rows[0];
+
     if (!user) {
-      return res.status(404).json({
-        message: "User not found",
-      });
-    }
-    if (!(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({
-        message: "Invalid username or password",
+        message: "Invalid credentials.",
       });
     }
-    // JWT (JSON Web Token) is used for authentication. The token includes the user details
+
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    if (!isPasswordCorrect) {
+      return res.status(401).json({
+        message: "Invalid credentials.",
+      });
+    }
+
     const token = jwt.sign(
       {
         userId: user.user_id,
@@ -165,24 +182,24 @@ router.post("/login", async (req, res) => {
         lastName: user.last_name,
         phoneNumber: user.phone_number,
       },
-      "secret-key-unique",
+      jwtSecret,
       {
         expiresIn: "24h",
       }
     );
-    // Returning a successful login response along with the user data and token
+
     res.status(200).json({
       token: token,
       user: {
         userId: user.user_id,
         email: user.email,
-        first_name: user.first_name,
-        last_name: user.last_name,
-        phone_number: user.phone_number,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        phoneNumber: user.phone_number,
       },
     });
   } catch (err) {
-    console.log("Error logging in user: ", err);
+    console.log("Error logging in user:", err);
     res.status(500).json({
       message: "Error logging in user",
       error: err.stack,
