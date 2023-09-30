@@ -37,6 +37,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const authRoutes = require("./routes/authRoutes");
 app.use("/api/auth", authRoutes); // route for the authentication pages (authRoutes.js)
 
+const otpRoutes = require("./routes/otpRoutes"); // route for the otp pages (otpRoutes.js)
+app.use("/api/auth/otp", otpRoutes);
+
 // erorr detail printing
 app.use((err, req, res, next) => {
   console.error(err.stack);
