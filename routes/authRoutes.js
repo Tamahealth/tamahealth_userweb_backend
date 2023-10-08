@@ -6,7 +6,7 @@ const bcrypt = require("bcrypt");
 const { pool } = require("../db/db");
 const { BYCRYPT_SALT_ROUNDS } = require("../db/db");
 const SECRET_KEY = process.env.JWT_SECRET_KEY || "fallback-secret-key";
-
+// console.log("Secret key:", SECRET_KEY);
 // genetaring a random user id
 function generateUserId(length = 6) {
   const charset =
@@ -182,7 +182,7 @@ router.post("/login", async (req, res) => {
         lastName: user.last_name,
         phoneNumber: user.phone_number,
       },
-      jwtSecret,
+      SECRET_KEY,
       {
         expiresIn: "24h",
       }
