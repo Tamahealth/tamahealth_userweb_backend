@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const twilio = require("twilio");
 require("dotenv").config();
+const jwt = require("jsonwebtoken");
+const JWT_SECRET = process.env.JWT_SECRET || "my-secret-key";
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
@@ -24,9 +26,8 @@ router.post("/send-otp", async (req, res) => {
         to: `+${fullPhoneNumber}`,
         channel: "sms",
       });
-    console.log(`Sending OTP to +${fullPhoneNumber}`); // Debug line
-
-    console.log("Twilio Response:", verification); // Debug line
+    console.log(`Sending OTP to +${fullPhoneNumber}`);
+    console.log("Twilio Response:", verification);
 
     if (verification.status === "pending") {
       res
