@@ -1,5 +1,8 @@
 // Router endpoints for handling [login, registration, google login, logout]
 const express = require("express");
+const passportSetup = require("../passport");
+
+const passport = require('passport');
 const router = express.Router();
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
@@ -34,7 +37,65 @@ async function checkUserIdExists(userId) {
   const result = await pool.query(checkQuery, [userId]);
   return result.rows.length > 0;
 }
+//google login
+const app = express();
 
+const bodyParser = require('body-parser');
+app.use(bodyParser.json());
+
+app.post('/api/verify-email', async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    // Query the database to check if the email exists
+    const query = 'SELECT * FROM users WHERE email = $1';
+    const { rows } = await pool.query(query, [email]);
+
+    if (rows.length > 0) {
+      res.status(200).json({ message: 'Email verified successfully' });
+    } else {
+      res.status(401).json({ message: 'Email not found in the database' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// router.get("/login/success", (req, res)=> {
+//   if (req.user) {
+//     res.status(200).json({
+//       error: false,
+//       message: "Successfully Loged In",
+//       user: req.user,
+//      });
+//   } else {
+//     res.status(403).json({ error: true, message: "Not Authorized"});
+//   }
+// });
+
+// router.get("/login/failed", (req, res) => {
+//   res.status(401).json({
+//     error: true,
+//     message: "Log in failure",
+//   });
+// });
+// router.get(
+//   "/google/callback",
+//   passport.authenticate("google", {
+//     successRedirect: process.env.CLlENT_URL,
+//     failureRedirect: "/login/failed",
+//   })
+// );
+
+// router.get("/google", passport.authenticate("google", ["profile", "email"]));
+
+// router.get("/logout", (req,res) =>{
+//   req.logout();
+//   res.redirect(process.env.CLIENT_URL);
+// });
+
+//end of google login
 router.post("/googleauth", async (req, res) => {
   const { firstName, email } = req.body;
 
