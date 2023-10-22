@@ -5,6 +5,9 @@ const morgan = require("morgan");
 const debug = require("debug");
 const dotenv = require("dotenv");
 dotenv.config();
+const passportSetup = require("./passport");
+const passport = require("passport");
+const cookieSession = require("cookie-session");
 const db = require("./db/db.js");
 const PORT = process.env.PORT || 3001;
 const bodyParser = require("body-parser");
@@ -36,7 +39,19 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // Adding routes for authentication
 const authRoutes = require("./routes/authRoutes");
 app.use("/api/auth", authRoutes); // route for the authentication pages (authRoutes.js)
+//google
+app.use(
+  cookieSession({
+  name: "session",
+  keys: ["cyberwolve"],
+  maxAge: 24 * 60 * 60 * 100,
+  })
+);
+app.use(passport.initialize());
+app.use(passport.session());
 
+app.use("/auth/login", authRoutes);
+//google end 
 const otpRoutes = require("./routes/otpRoutes"); // route for the otp pages (otpRoutes.js)
 app.use("/api/auth/otp", otpRoutes);
 
