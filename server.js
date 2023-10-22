@@ -15,7 +15,7 @@ const app = express();
 // Enabling Cross-Origin Resource Sharing (CORS) with default configuration
 const corsOptions = {
   // the first url to be changed with the deployed one later on
-  origin: ["https://homeheartui-wi1z.onrender.com", "http://localhost:5173"],
+  origin: ["http://localhost:5173"],
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true,
   optionsSuccessStatus: 204,
