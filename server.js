@@ -5,7 +5,6 @@ const morgan = require("morgan");
 const debug = require("debug");
 const dotenv = require("dotenv");
 dotenv.config();
-const passportSetup = require("./passport");
 const passport = require("passport");
 const cookieSession = require("cookie-session");
 const db = require("./db/db.js");
@@ -38,22 +37,30 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // Adding routes for authentication
 const authRoutes = require("./routes/authRoutes");
-app.use("/api/auth", authRoutes); // route for the authentication pages (authRoutes.js)
-//google
+// route for the authentication pages (authRoutes.js)
+app.use("/api/auth", authRoutes);
+
+//google @Meron-Abera what is this for? :)
 app.use(
   cookieSession({
-  name: "session",
-  keys: ["cyberwolve"],
-  maxAge: 24 * 60 * 60 * 100,
+    name: "session",
+    keys: ["cyberwolve"],
+    maxAge: 24 * 60 * 60 * 100,
   })
 );
 app.use(passport.initialize());
 app.use(passport.session());
 
 app.use("/auth/login", authRoutes);
-//google end 
-const otpRoutes = require("./routes/otpRoutes"); // route for the otp pages (otpRoutes.js)
+//google end
+
+// route for the otp pages (otpRoutes.js)
+const otpRoutes = require("./routes/otpRoutes");
 app.use("/api/auth/otp", otpRoutes);
+
+// route for the prescription pages (prescriptionRoutes.js)
+const prescriptionRoutes = require("./routes/prescriptionRoutes");
+app.use("/api/prescriptions", prescriptionRoutes);
 
 // erorr detail printing
 app.use((err, req, res, next) => {
