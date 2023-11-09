@@ -2,6 +2,20 @@
 const express = require("express");
 const { pool } = require("../db/db");
 
+const grabUserInfo = async (userId) => {
+  try {
+    const query = `
+      SELECT * FROM users
+      WHERE user_id = $1;
+    `;
+    const res = await pool.query(query, [userId]);
+    return res.rows[0];
+  } catch (err) {
+    console.error(err);
+    throw new Error("Error fetching user information");
+  }
+};
+
 // Function to add a new prescription to the database
 const addPrescription = async (prescriptionData) => {
   try {
@@ -58,4 +72,5 @@ const getPrescriptions = async () => {
 module.exports = {
   addPrescription,
   getPrescriptions,
+  grabUserInfo,
 };

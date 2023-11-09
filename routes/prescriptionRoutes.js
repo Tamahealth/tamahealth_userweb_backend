@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const prescriptionModel = require("../models/prescriptionModel");
 const { upload, fileUploadMiddleware } = require("../utils/fileUploadHandler");
+const { grabUserInfo } = require("../models/prescriptionModel");
 
 // Route to submit a new prescription
 router.post(
@@ -43,6 +44,21 @@ router.get("/my-prescriptions", async (req, res) => {
     res
       .status(500)
       .json({ message: "Error fetching prescriptions", error: error.message });
+  }
+});
+
+//grab current user info
+router.get("/user/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const userInfo = await grabUserInfo(userId);
+    if (userInfo) {
+      res.json(userInfo);
+    } else {
+      res.status(404).send("User not found");
+    }
+  } catch (error) {
+    res.status(500).send("Server error");
   }
 });
 
