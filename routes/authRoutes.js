@@ -1,7 +1,5 @@
 // Router endpoints for handling [login, registration, google login, logout]
 const express = require("express");
-const passportSetup = require("../passport");
-const passport = require("passport");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
@@ -149,7 +147,7 @@ router.post("/register", async (req, res) => {
 // Login endpoint for handling user login using username/email and password
 router.post("/login", async (req, res) => {
   const { email, phoneNumber, password } = req.body;
-  console.log("Request body:", req.body);
+  // console.log("Request body:", req.body);
 
   if (!email && !phoneNumber) {
     return res.status(400).json({

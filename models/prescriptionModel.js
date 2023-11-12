@@ -28,9 +28,9 @@ const addPrescription = async (prescriptionData) => {
     // Your SQL parameters
     const values = [
       prescriptionData.userId,
-      prescriptionData.usAddressId, // The ID of the US address, or null if not applicable
-      prescriptionData.internationalAddressId, // The ID of the international address, or null if not applicable
-      prescriptionData.prescriptionUrl, // The URL of the prescription file stored in S3
+      prescriptionData.usAddressId,
+      prescriptionData.internationalAddressId,
+      prescriptionData.prescriptionUrl,
       prescriptionData.prescriberName,
       prescriptionData.prescriberInstitution,
       prescriptionData.prescriberPhone,
