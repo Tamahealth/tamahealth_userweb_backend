@@ -1,5 +1,9 @@
 const multer = require("multer");
-const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+} = require("@aws-sdk/client-s3");
 const { v4: uuidv4 } = require("uuid");
 
 const bucketName = process.env.AWS_S3_BUCKET_NAME;
@@ -22,18 +26,18 @@ const upload = multer({ storage: storage });
 
 // Function to upload a file to S3
 const uploadFileToS3 = async (file) => {
+  const fileKey = `uploads/${uuidv4()}-${file.originalname}`;
   const uploadParams = {
     Bucket: bucketName,
-    Key: `uploads/${uuidv4()}-${file.originalname}`,
+    Key: fileKey,
     Body: file.buffer,
     ContentType: file.mimetype,
-    ACL: "public-read",
   };
 
   try {
-    const command = new PutObjectCommand(uploadParams);
-    const data = await s3.send(command);
-    return `https://${bucketName}.s3.${bucketRegion}.amazonaws.com/${uploadParams.Key}`;
+    await s3.send(new PutObjectCommand(uploadParams));
+    const fileUrl = `https://${bucketName}.s3.${bucketRegion}.amazonaws.com/${fileKey}`;
+    return { fileUrl, fileKey };
   } catch (error) {
     console.error(error);
     throw error;
@@ -44,8 +48,9 @@ const uploadFileToS3 = async (file) => {
 const fileUploadMiddleware = async (req, res, next) => {
   if (req.file) {
     try {
-      const fileUrl = await uploadFileToS3(req.file);
+      const { fileUrl, fileKey } = await uploadFileToS3(req.file);
       req.fileUrl = fileUrl; // Attach the file URL to the request object
+      req.fileKey = fileKey; // Attach the file key to the request object
       next();
     } catch (error) {
       next(error);
@@ -55,7 +60,24 @@ const fileUploadMiddleware = async (req, res, next) => {
   }
 };
 
+// Function to delete a file from S3
+const deleteFileFromS3 = async (fileKey) => {
+  const deleteParams = {
+    Bucket: bucketName,
+    Key: fileKey,
+  };
+
+  try {
+    await s3.send(new DeleteObjectCommand(deleteParams));
+    return { success: true, message: "File deleted successfully" };
+  } catch (error) {
+    console.error("Error deleting file from S3:", error);
+    return { success: false, error: error.message };
+  }
+};
+
 module.exports = {
   upload,
   fileUploadMiddleware,
+  deleteFileFromS3,
 };

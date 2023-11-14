@@ -1,7 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const prescriptionModel = require("../models/prescriptionModel");
-const { upload, fileUploadMiddleware } = require("../utils/fileUploadHandler");
+const {
+  upload,
+  fileUploadMiddleware,
+  deleteFileFromS3,
+} = require("../utils/fileUploadHandler");
 const { grabUserInfo } = require("../models/prescriptionModel");
 
 // Route to submit a new prescription
@@ -17,7 +21,11 @@ router.post(
       req.body.prescriptionUrl = req.fileUrl;
 
       // Now req.body contains the text fields along with the prescription URL
-      const newPrescription = await prescriptionModel.addPrescription(req.body);
+      const newPrescription = await prescriptionModel.addPrescription({
+        ...req.body,
+        prescriptionUrl: req.fileUrl,
+        prescriptionFileKey: req.fileKey, // Save the file key as well
+      });
 
       res.status(201).json({
         message: "Prescription submitted successfully",
@@ -59,6 +67,36 @@ router.get("/user/:userId", async (req, res) => {
     }
   } catch (error) {
     res.status(500).send("Server error");
+  }
+});
+
+// File upload endpoint
+router.post(
+  "/upload-file",
+  upload.single("file"),
+  fileUploadMiddleware,
+  (req, res) => {
+    // if upload is successful, send back the file URL
+    res.json({ fileUrl: req.fileUrl, fileKey: req.fileKey });
+  }
+);
+
+// Endpoint to delete a file from S3
+router.delete("/delete-file", async (req, res) => {
+  // The fileKey should be the key of the file in the S3 bucket
+  const { fileKey } = req.body;
+
+  if (!fileKey) {
+    return res.status(400).json({ message: "File key is required" });
+  }
+
+  const result = await deleteFileFromS3(fileKey);
+  if (result.success) {
+    res.json({ message: result.message });
+  } else {
+    res
+      .status(500)
+      .json({ message: "Error deleting file", error: result.error });
   }
 });
 
