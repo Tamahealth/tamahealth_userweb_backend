@@ -16,7 +16,7 @@ router.post("/send-otp", async (req, res) => {
     // console.log("Account SID:", accountSid);
     // console.log("Auth Token:", authToken);
     // console.log("Service ID:", serviceId);
-    console.log("request body:", req.body);
+    // console.log("request body:", req.body);
 
     const { phoneNumber } = req.body;
     const fullPhoneNumber = `+1${phoneNumber}`;
