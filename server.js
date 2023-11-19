@@ -17,7 +17,7 @@ const app = express();
 // Enabling Cross-Origin Resource Sharing (CORS) with default configuration
 const corsOptions = {
   // the first url to be changed with the deployed one later on
-  origin: ["http://localhost:5173"],
+  origin: ["http://localhost:5173", "https://js.stripe.com"],
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true,
   optionsSuccessStatus: 204,
@@ -61,6 +61,10 @@ app.use("/api/auth/otp", otpRoutes);
 // route for the prescription pages (prescriptionRoutes.js)
 const prescriptionRoutes = require("./routes/prescriptionRoutes");
 app.use("/api/prescriptions", prescriptionRoutes);
+
+//route for the payment pages (paymentRoutes.js)
+const paymentRoutes = require("./routes/paymentRoutes");
+app.use("/api/payments", paymentRoutes);
 
 // erorr detail printing
 app.use((err, req, res, next) => {
