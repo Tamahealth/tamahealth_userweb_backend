@@ -17,7 +17,7 @@ const app = express();
 // Enabling Cross-Origin Resource Sharing (CORS) with default configuration
 const corsOptions = {
   // the first url to be changed with the deployed one later on
-  origin: ["http://localhost:5173", "https://js.stripe.com"],
+  origin: ["http://localhost:5173"],
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true,
   optionsSuccessStatus: 204,
