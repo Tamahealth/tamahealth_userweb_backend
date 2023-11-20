@@ -17,6 +17,9 @@ router.post("/create-payment-intent", async (req, res) => {
       {
         amount: amount,
         currency: "usd",
+        automatic_payment_methods: {
+          enabled: true,
+        },
         metadata: { serviceId, userId: user_id },
       },
       {
