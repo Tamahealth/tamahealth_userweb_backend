@@ -1,6 +1,18 @@
 const db = require("../db/db"); // Import your database connection
 
 const PaymentModel = {
+  async getServiceDetails(serviceId) {
+    const query = `SELECT * FROM services WHERE service_id = $1`;
+    const values = [serviceId];
+
+    try {
+      const { rows } = await db.query(query, values);
+      return rows[0];
+    } catch (error) {
+      throw error;
+    }
+  },
+
   // Method to create a new payment record
   async createPayment({
     userId,
