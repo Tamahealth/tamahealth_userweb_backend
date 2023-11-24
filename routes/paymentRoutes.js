@@ -20,18 +20,21 @@ router.get("/services/:serviceId", async (req, res) => {
 // POST endpoint to create a payment intent
 router.post("/create-payment-intent", authenticateToken, async (req, res) => {
   try {
-    const { amount, serviceId, userId } = req.body;
-    console.log("Request body is ", req.body);
-    const user_id = req.user.userId; // Extracted from JWT token
-    console.log(
-      "userId from token is ",
-      userId,
-      "and user id from body is",
-      user_id
-    );
-    if (userId !== user_id) {
+    // console.log("Headers:", req.headers);
+    // console.log("Body:", req.body);
+
+    // Destructure the required fields from req.body
+    const { amount, serviceId, user_id: userIdFromBody } = req.body;
+
+    // Extract the userId from the JWT token
+    const userIdFromToken = req.user.userId;
+
+    // Compare the userId from token and the userId from request body
+    if (userIdFromToken !== userIdFromBody) {
+      console.log("Unauthorized action", userIdFromToken, userIdFromBody);
       return res.status(403).json({ error: "Unauthorized action" });
     }
+
     // Validate serviceId, amount, and user's eligibility for payment
     const idempotencyKey = uuidv4();
     const paymentIntent = await stripe.paymentIntents.create(
@@ -39,7 +42,7 @@ router.post("/create-payment-intent", authenticateToken, async (req, res) => {
         amount: amount,
         currency: "usd",
         automatic_payment_methods: { enabled: true },
-        metadata: { serviceId, userId: userId },
+        metadata: { serviceId, userId: userIdFromToken },
       },
       { idempotencyKey }
     );
