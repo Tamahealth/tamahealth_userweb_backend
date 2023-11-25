@@ -7,38 +7,46 @@ const {
   deleteFileFromS3,
 } = require("../utils/fileUploadHandler");
 const { grabUserInfo } = require("../models/prescriptionModel");
+const authenticateToken = require("../jwtMiddleware");
+
+router.use(express.json());
 
 // Route to submit a new prescription
-router.post(
-  "/submit-prescription",
-  upload.single("prescription"),
-  fileUploadMiddleware,
-  async (req, res) => {
-    try {
-      // Add the user ID from the authentication middleware to the prescription data
-      req.body.userId = req.user.id;
-      // Add the file URL from the fileUploadMiddleware to the prescription data
-      req.body.prescriptionUrl = req.fileUrl;
+router.post("/submit-prescription", authenticateToken, async (req, res) => {
+  try {
+    // Extract user ID from the authentication middleware
+    const userId = req.user.userId;
+    // console.log("User ID when submitting prescription is:", userId);
 
-      // Now req.body contains the text fields along with the prescription URL
-      const newPrescription = await prescriptionModel.addPrescription({
-        ...req.body,
-        prescriptionUrl: req.fileUrl,
-        prescriptionFileKey: req.fileKey, // Save the file key as well
-      });
+    // Split formData into relevant parts
+    const { usAddressData, internationalAddressData, prescriptionData } =
+      req.body;
 
-      res.status(201).json({
-        message: "Prescription submitted successfully",
-        data: newPrescription,
-      });
-    } catch (error) {
-      res.status(500).json({
-        message: "Error submitting prescription",
-        error: error.message,
-      });
-    }
+    // Add additional details to prescriptionData
+    prescriptionData.userId = userId;
+
+    // Call the addPrescription function with split data
+    const newPrescription = await prescriptionModel.addPrescription(
+      userId,
+      usAddressData,
+      internationalAddressData,
+      prescriptionData
+    );
+
+    // Clear formData from the client (send instruction in response)
+    res.status(201).json({
+      message: "Prescription submitted successfully",
+      data: newPrescription,
+      clearFormData: true,
+    });
+  } catch (error) {
+    console.error("Error in submit-prescription route:", error);
+    res.status(500).json({
+      message: "Error submitting prescription",
+      error: error.message,
+    });
   }
-);
+});
 
 // Route to fetch all prescriptions for the logged-in user
 router.get("/my-prescriptions", async (req, res) => {

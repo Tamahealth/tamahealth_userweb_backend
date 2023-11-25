@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS Prescriptions (
     CONSTRAINT fk_international_address FOREIGN KEY (international_address_id) REFERENCES International_Addresses(address_id)
 );
 
--- Creating the Payments table
+
 -- Creating the Payments table
 CREATE TABLE IF NOT EXISTS Payments (
     payment_id SERIAL PRIMARY KEY,
@@ -83,8 +83,6 @@ $$ language 'plpgsql';
 CREATE TRIGGER update_payment_modified_date BEFORE UPDATE
 ON Payments FOR EACH ROW EXECUTE PROCEDURE 
 update_modified_column();
-
-
 
 
 -- creating the Services table

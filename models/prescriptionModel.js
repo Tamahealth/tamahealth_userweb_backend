@@ -17,31 +17,96 @@ const grabUserInfo = async (userId) => {
 };
 
 // Function to add a new prescription to the database
-const addPrescription = async (prescriptionData) => {
+
+const addPrescription = async (
+  userId,
+  usAddressData,
+  internationalAddressData,
+  prescriptionData
+) => {
+  const client = await pool.connect();
+
   try {
-    // Your SQL INSERT statement
-    const insertQuery = `
-      INSERT INTO prescriptions (
-        user_id, us_address_id, international_address_id, prescription_file_url, prescriber_name, prescriber_institution, prescriber_phone, prescriber_email, notes
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    await client.query("BEGIN"); // Start transaction
+
+    let usAddressId = null,
+      internationalAddressId = null;
+
+    // Insert into US_Addresses if usAddressData is provided
+    if (usAddressData && Object.keys(usAddressData).length > 0) {
+      const usAddressInsertQuery = `
+        INSERT INTO US_Addresses (user_id, address_line_1, city, state, zip, country)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING address_id;`;
+      const usAddressValues = [
+        userId,
+        usAddressData.address_line_1,
+        usAddressData.city,
+        usAddressData.state,
+        usAddressData.zip,
+        "United States", // Assuming country is always 'United States' for US_Addresses
+      ];
+      const usAddressRes = await client.query(
+        usAddressInsertQuery,
+        usAddressValues
+      );
+      usAddressId = usAddressRes.rows[0].address_id;
+    }
+
+    // Insert into International_Addresses if internationalAddressData is provided
+    if (
+      internationalAddressData &&
+      Object.keys(internationalAddressData).length > 0
+    ) {
+      const internationalAddressInsertQuery = `
+        INSERT INTO International_Addresses (user_id, full_address, city, country, notes)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING address_id;`;
+      const internationalAddressValues = [
+        userId,
+        internationalAddressData.full_address,
+        internationalAddressData.city,
+        internationalAddressData.country,
+        internationalAddressData.notes || null, // Notes can be optional
+      ];
+      const internationalAddressRes = await client.query(
+        internationalAddressInsertQuery,
+        internationalAddressValues
+      );
+      internationalAddressId = internationalAddressRes.rows[0].address_id;
+    }
+
+    // Insert into Prescriptions
+    const prescriptionInsertQuery = `
+      INSERT INTO Prescriptions (user_id, us_address_id, international_address_id, prescription_file_url, prescriber_name, prescriber_institution, prescriber_phone, prescriber_email, notes)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       RETURNING *;`;
-    // Your SQL parameters
-    const values = [
-      prescriptionData.userId,
-      prescriptionData.usAddressId,
-      prescriptionData.internationalAddressId,
-      prescriptionData.prescriptionUrl,
-      prescriptionData.prescriberName,
-      prescriptionData.prescriberInstitution,
-      prescriptionData.prescriberPhone,
-      prescriptionData.prescriberEmail,
-      prescriptionData.notes,
+    const prescriptionValues = [
+      userId,
+      usAddressId,
+      internationalAddressId,
+      prescriptionData.prescription_file_url,
+      prescriptionData.prescriber_name,
+      prescriptionData.prescriber_institution,
+      prescriptionData.prescriber_phone,
+      prescriptionData.prescriber_email,
+      prescriptionData.patient_notes || null, // Notes can be optional
     ];
-    // Execute the SQL query
-    const res = await pool.query(insertQuery, values);
-    return res.rows[0]; // Return the newly inserted prescription
+    console.log("Prescription Values:", prescriptionValues);
+
+    const prescriptionRes = await client.query(
+      prescriptionInsertQuery,
+      prescriptionValues
+    );
+
+    await client.query("COMMIT"); // Commit transaction
+    return prescriptionRes.rows[0]; // Return the newly inserted prescription
   } catch (err) {
+    await client.query("ROLLBACK"); // Rollback transaction on error
+    console.error("Transaction Error:", err);
     throw err;
+  } finally {
+    client.release(); // Release client back to pool
   }
 };
 
