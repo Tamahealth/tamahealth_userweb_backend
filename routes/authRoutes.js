@@ -63,7 +63,7 @@ router.post("/verify-email", async (req, res) => {
         },
         SECRET_KEY,
         {
-          expiresIn: "1h",
+          expiresIn: "24h",
         }
       );
 

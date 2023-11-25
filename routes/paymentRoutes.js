@@ -22,7 +22,6 @@ router.post("/create-payment-intent", authenticateToken, async (req, res) => {
   try {
     // console.log("Headers:", req.headers);
     // console.log("Body:", req.body);
-
     // Destructure the required fields from req.body
     const { amount, serviceId, user_id: userIdFromBody } = req.body;
 

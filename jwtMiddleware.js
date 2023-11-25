@@ -8,7 +8,15 @@ const authenticateToken = (req, res, next) => {
   if (token == null) return res.sendStatus(401); // Unauthorized
 
   jwt.verify(token, SECRET_KEY, (err, user) => {
-    if (err) return res.sendStatus(403);
+    if (err) {
+      console.error("Token verification error:", err);
+      return res.status(403).json({ message: "Token verification failed" });
+    }
+    if (!user || !user.userId) {
+      // Change this line to check for userId
+      console.error("Invalid token payload:", user);
+      return res.status(403).json({ message: "Invalid token payload" });
+    }
     req.user = user;
     next();
   });
