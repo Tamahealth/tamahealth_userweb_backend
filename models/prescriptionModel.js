@@ -35,12 +35,13 @@ const addPrescription = async (
     // Insert into US_Addresses if usAddressData is provided
     if (usAddressData && Object.keys(usAddressData).length > 0) {
       const usAddressInsertQuery = `
-        INSERT INTO US_Addresses (user_id, address_line_1, city, state, zip, country)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        INSERT INTO US_Addresses (user_id, address_line_1, address_line_2, city, state, zip, country)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING address_id;`;
       const usAddressValues = [
         userId,
         usAddressData.address_line_1,
+        usAddressData.apartment_number,
         usAddressData.city,
         usAddressData.state,
         usAddressData.zip,
@@ -90,7 +91,7 @@ const addPrescription = async (
       prescriptionData.prescriber_institution,
       prescriptionData.prescriber_phone,
       prescriptionData.prescriber_email,
-      prescriptionData.patient_notes || null, // Notes can be optional
+      prescriptionData.patient_notes || null, // As Notes can be optional
     ];
     console.log("Prescription Values:", prescriptionValues);
 
