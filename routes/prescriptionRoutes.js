@@ -68,12 +68,12 @@ router.get("/user/:userId", async (req, res) => {
   try {
     const userId = req.params.userId;
     const userInfo = await grabUserInfo(userId);
-    if (userInfo) {
-      res.json(userInfo);
-    } else {
-      res.status(404).send("User not found");
+    if (!userInfo) {
+      return res.status(404).send("User not found");
     }
+    res.json(userInfo);
   } catch (error) {
+    console.error("Server error", error);
     res.status(500).send("Server error");
   }
 });
