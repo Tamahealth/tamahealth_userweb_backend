@@ -2,6 +2,7 @@
 const express = require("express");
 const { pool } = require("../db/db");
 
+// Function to grab user information from the database
 const grabUserInfo = async (userId) => {
   try {
     const query = `
@@ -16,8 +17,7 @@ const grabUserInfo = async (userId) => {
   }
 };
 
-// Function to add a new prescription to the database
-
+// Function to add a new prescription to the database after payment is successful
 const addPrescription = async (
   userId,
   usAddressData,
@@ -45,7 +45,7 @@ const addPrescription = async (
         usAddressData.city,
         usAddressData.state,
         usAddressData.zip,
-        "United States", // Assuming country is always 'United States' for US_Addresses
+        "United States", // country is always 'United States' for US_Addresses
       ];
       const usAddressRes = await client.query(
         usAddressInsertQuery,
@@ -91,9 +91,9 @@ const addPrescription = async (
       prescriptionData.prescriber_institution,
       prescriptionData.prescriber_phone,
       prescriptionData.prescriber_email,
-      prescriptionData.patient_notes || null, // As Notes can be optional
+      prescriptionData.patient_notes || null, // Since Notes can be optional
     ];
-    console.log("Prescription Values:", prescriptionValues);
+    // console.log("Prescription Values:", prescriptionValues);
 
     const prescriptionRes = await client.query(
       prescriptionInsertQuery,
@@ -112,28 +112,28 @@ const addPrescription = async (
 };
 
 // Function to get all prescriptions from the database
-const getPrescriptions = async () => {
-  try {
-    // Your SQL SELECT statement
-    const query = `
-      SELECT p.*, 
-             usa.address_line_1 AS us_address_line_1, 
-             usa.address_line_2 AS us_address_line_2, 
-             usa.city AS us_city, 
-             usa.state AS us_state, 
-             usa.zip AS us_zip, 
-             inta.full_address AS international_full_address, 
-             inta.city AS international_city, 
-             inta.country AS international_country 
-      FROM prescriptions p
-      LEFT JOIN US_Addresses usa ON p.us_address_id = usa.address_id
-      LEFT JOIN International_Addresses inta ON p.international_address_id = inta.address_id;`;
-    const res = await pool.query(query);
-    return res.rows; // Return all prescriptions with address details
-  } catch (err) {
-    throw err;
-  }
-};
+// const getPrescriptions = async () => {
+//   try {
+//     // Your SQL SELECT statement
+//     const query = `
+//       SELECT p.*,
+//              usa.address_line_1 AS us_address_line_1,
+//              usa.address_line_2 AS us_address_line_2,
+//              usa.city AS us_city,
+//              usa.state AS us_state,
+//              usa.zip AS us_zip,
+//              inta.full_address AS international_full_address,
+//              inta.city AS international_city,
+//              inta.country AS international_country
+//       FROM prescriptions p
+//       LEFT JOIN US_Addresses usa ON p.us_address_id = usa.address_id
+//       LEFT JOIN International_Addresses inta ON p.international_address_id = inta.address_id;`;
+//     const res = await pool.query(query);
+//     return res.rows; // Return all prescriptions with address details
+//   } catch (err) {
+//     throw err;
+//   }
+// };
 
 module.exports = {
   addPrescription,
